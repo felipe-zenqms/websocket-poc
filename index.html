@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>WebSocket POC</title>
+    <style>
+      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+      #form { padding: 0.5rem 1rem; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages > li { padding: 0.5rem 1rem; }
+      #messages > li:nth-child(odd) { background: #efefef; }
+    </style>
+  </head>
+  <body>
+    <form id="form" action="">
+      Id: <input id="id" autocomplete="off" />
+      Token: <input id="token" autocomplete="off" />
+      <button>Connect</button>
+    </form>
+    <ul id="messages"></ul>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      const form = document.getElementById('form');
+      const id = document.getElementById('id');
+      const token = document.getElementById('token');
+      const messages = document.getElementById('messages');
+
+      let socket = null;
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (id.value && token.value) {
+          connect(id.value, token.value)
+        }
+        else {
+          alert('Id and Token are required')
+        }
+      });
+
+      const connect = (id, token) => {
+        if(socket) {
+          messages.innerHTML = "";
+          socket.disconnect(true);
+        }
+        
+        socket = io({
+          extraHeaders: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        socket.on('connect_error', (err) => alert(err))
+        socket.on('connect', () => alert('Socket Connected'))
+
+        socket.on(id, (msg) => {
+          const item = document.createElement('li');
+          item.textContent = `${new Date().toISOString()} - ${JSON.stringify(msg)}`;
+          messages.appendChild(item);
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+      }
+    </script>
+  </body>
+</html>
